@@ -1,9 +1,5 @@
 @import "tailwindcss";
-/* ==========================================
-   LOCAL FONT DEFINITIONS (VARIABLE FONTS)
-   ========================================== */
 
-/* 1. DM Sans Normal (Supports weights 100 to 900) */
 @font-face {
   font-family: 'DM Sans';
   src: url('./assets/fonts/DM_Sans/DMSans-VariableFont_opsz,wght.ttf') format('truetype-variations');
@@ -12,7 +8,7 @@
   font-display: swap;
 }
 
-/* 2. DM Sans Italic (Supports weights 100 to 900 in italic) */
+
 @font-face {
   font-family: 'DM Sans';
   src: url('./assets/fonts/DM_Sans/DMSans-Italic-VariableFont_opsz,wght.ttf') format('truetype-variations');
@@ -21,7 +17,6 @@
   font-display: swap;
 }
 
-/* 3. Bricolage Grotesque (Supports weights 200 to 800) */
 @font-face {
   font-family: 'Bricolage Grotesque';
   src: url('./assets/fonts/Bricolage_Grotesque/BricolageGrotesque-VariableFont_opsz,wdth,wght.ttf') format('truetype-variations');
@@ -32,7 +27,7 @@
 
 @theme {
   /* Fonts */
---font-dm: "DM Sans", sans-serif;
+  --font-dm: "DM Sans", sans-serif;
   --font-bricolage: "Bricolage Grotesque", sans-serif;
 
   /* Neutral Palette */
