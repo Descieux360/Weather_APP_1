@@ -1,0 +1,67 @@
+@import "tailwindcss";
+/* ==========================================
+   LOCAL FONT DEFINITIONS (VARIABLE FONTS)
+   ========================================== */
+
+/* 1. DM Sans Normal (Supports weights 100 to 900) */
+@font-face {
+  font-family: 'DM Sans';
+  src: url('./assets/fonts/DM_Sans/DMSans-VariableFont_opsz,wght.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 2. DM Sans Italic (Supports weights 100 to 900 in italic) */
+@font-face {
+  font-family: 'DM Sans';
+  src: url('./assets/fonts/DM_Sans/DMSans-Italic-VariableFont_opsz,wght.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 3. Bricolage Grotesque (Supports weights 200 to 800) */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('./assets/fonts/Bricolage_Grotesque/BricolageGrotesque-VariableFont_opsz,wdth,wght.ttf') format('truetype-variations');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  /* Fonts */
+--font-dm: "DM Sans", sans-serif;
+  --font-bricolage: "Bricolage Grotesque", sans-serif;
+
+  /* Neutral Palette */
+  --color-neutral-900: hsl(243, 96%, 9%);
+  --color-neutral-800: hsl(243, 27%, 20%);
+  --color-neutral-700: hsl(243, 23%, 24%);
+  --color-neutral-600: hsl(243, 23%, 30%);
+  --color-neutral-300: hsl(240, 6%, 70%);
+  --color-neutral-200: hsl(250, 6%, 84%);
+  --color-neutral-0: hsl(0, 0%, 100%);
+
+  /* Accent Colors */
+  --color-orange-500: hsl(28, 100%, 52%);
+  --color-blue-500: hsl(233, 67%, 56%);
+  --color-blue-700: hsl(248, 70%, 36%);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-neutral-900);
+    color: var(--color-neutral-0);
+    font-family: var(--font-dm);
+    font-size: 1.125rem; /* 18px body copy requirement */
+    min-height: 100vh;
+  }
+
+  /* Target WCAG-compliant focus states */
+  *:focus-visible {
+    outline: 2px solid var(--color-blue-500);
+    outline-offset: 2px;
+  }
+}
