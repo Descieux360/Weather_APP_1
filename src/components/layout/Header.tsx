@@ -1,35 +1,20 @@
 import { useEffect, useState } from 'react';
-import type { UnitPreferences } from '../../types/units.ts';
-
-const METRIC_PREFERENCES: UnitPreferences = {
-  system: 'metric',
-  temperature: 'celsius',
-  windSpeed: 'kmh',
-  precipitation: 'mm',
-};
-
-const IMPERIAL_PREFERENCES: UnitPreferences = {
-  system: 'imperial',
-  temperature: 'fahrenheit',
-  windSpeed: 'mph',
-  precipitation: 'inch',
-};
+import { useWeather } from '../../context/WeatherContext';
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [currentUnitPreferences, setCurrentUnitPreferences] = useState<UnitPreferences>(METRIC_PREFERENCES);
+  const { isMetric, toggleUnitSystem } = useWeather();
+
 
   const handleUnitToggle = (e: React.MouseEvent): void => {
-    e.stopPropagation(); // Prevents parent div from immediately toggling the menu state
-    setCurrentUnitPreferences((prev) =>
-      prev.system === 'metric' ? IMPERIAL_PREFERENCES : METRIC_PREFERENCES
-    );
+    e.stopPropagation();
+    toggleUnitSystem();
     setIsDropdownOpen(false);
   };
 
   useEffect(() => {
-    console.log(`My current unit preference is ${currentUnitPreferences.system}`);
-  }, [currentUnitPreferences]);
+    console.log(`My current unit preference is ${isMetric}`);
+  }, []);
 
   return (
     <header className="flex items-center justify-between text-white">
@@ -53,32 +38,44 @@ const Header = () => {
 
         {isDropdownOpen && (
           <div
-            onClick={(e) => e.stopPropagation()} // Keeps menu open when interacting inside
+            onClick={(e) => e.stopPropagation()}
             className="absolute right-0 top-full z-10 mt-2 w-52 rounded-lg bg-neutral-800 p-2 shadow-lg"
           >
             <button
               onClick={handleUnitToggle}
               className="mb-2 w-full rounded-md p-2 text-left hover:bg-neutral-600"
             >
-              Switch to {currentUnitPreferences.system === 'metric' ? 'Imperial' : 'Metric'}
+              Switch to {isMetric ? 'Imperial' : 'Metric'}
             </button>
 
             <div className="mb-1 p-2 text-sm text-neutral-300">Temperature</div>
             <ul>
-              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${currentUnitPreferences.system === 'metric' ? 'bg-neutral-600' : ''}`}>Celsius</li>
-              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${currentUnitPreferences.system !== 'metric' ? 'bg-neutral-600' : ''}`}>Fahrenheit</li>
+              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${isMetric ? 'bg-neutral-600' : ''}`}>
+                Celsius
+              </li>
+              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${!isMetric ? 'bg-neutral-600' : ''}`}>
+                Fahrenheit
+              </li>
             </ul>
 
             <div className="mb-1 p-2 text-sm text-neutral-300">Wind Speed</div>
             <ul>
-              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${currentUnitPreferences.system === 'metric' ? 'bg-neutral-600' : ''}`}>km/h</li>
-              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${currentUnitPreferences.system !== 'metric' ? 'bg-neutral-600' : ''}`}>mph</li>
+              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${isMetric ? 'bg-neutral-600' : ''}`}>
+                km/h
+              </li>
+              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${!isMetric ? 'bg-neutral-600' : ''}`}>
+                mph
+              </li>
             </ul>
 
             <div className="mb-1 p-2 text-sm text-neutral-300">Precipitation</div>
             <ul>
-              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${currentUnitPreferences.system === 'metric' ? 'bg-neutral-600' : ''}`}>millimeters</li>
-              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${currentUnitPreferences.system !== 'metric' ? 'bg-neutral-600' : ''}`}>inch</li>
+              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${isMetric ? 'bg-neutral-600' : ''}`}>
+                millimeters
+              </li>
+              <li className={`cursor-pointer p-2 hover:bg-neutral-600 ${!isMetric ? 'bg-neutral-600' : ''}`}>
+                inch
+              </li>
             </ul>
           </div>
         )}
