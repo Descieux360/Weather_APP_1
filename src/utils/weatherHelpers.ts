@@ -45,9 +45,9 @@ export const getWeatherCondition = (code: number): WeatherCondition => {
     case 95:
     case 96:
     case 99:
-      return { label: 'Thunderstorm', icon: '/src/assets/images/icon-storm.webp' };
+      return { label: 'Thunderstorm', icon: '/assets/images/icon-storm.webp' };
     default:
-      return { label: 'Unknown', icon: '/src/assets/images/icon-sunny.webp' };
+      return { label: 'Unknown', icon: '/assets/images/icon-sunny.webp' };
   }
 };
 

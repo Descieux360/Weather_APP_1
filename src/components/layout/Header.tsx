@@ -26,7 +26,7 @@ const Header = () => {
         onClick={() => setIsDropdownOpen((prev) => !prev)}
         className= "relative flex cursor-pointer items-center  rounded-lg bg-neutral-800 gap-2 px-2 lg:px-4 py-2"
       >
-        <img src="./src/assets/images/icon-units.svg" alt="Units Toggle" />
+        <img src="/assets/images/icon-units.svg" alt="Units Toggle" />
         <span className="text-sm">Units</span>
         <div>
           <img
