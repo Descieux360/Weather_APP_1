@@ -3,7 +3,7 @@ import { useWeather } from '../../context/WeatherContext'; // Adjust path based 
 import { getWeatherCondition , formatDayOfWeek } from '../../utils/weatherHelpers'; // Adjust helper imports as needed
 
 export const DailyForecast: React.FC = () => {
-  const { weatherData, unitPreferences, isLoading } = useWeather();
+  const { weatherData, isLoading } = useWeather();
 
   if (isLoading || !weatherData?.daily) {
     return (
