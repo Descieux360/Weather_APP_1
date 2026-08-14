@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useWeather } from '../../context/WeatherContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { isMetric, toggleUnitSystem } = useWeather();
 
+  const isMobile = useMediaQuery('(min-width: 426px)');
 
   const handleUnitToggle = (e: React.MouseEvent): void => {
     e.stopPropagation();
@@ -12,25 +14,23 @@ const Header = () => {
     setIsDropdownOpen(false);
   };
 
-  useEffect(() => {
-    console.log(`My current unit preference is ${isMetric}`);
-  }, []);
-
   return (
     <header className="flex items-center justify-between text-white">
       <div className="logo">
-        <img src="./src/assets/images/logo.svg" alt="My Weather App Logo" />
+        <img
+          className='w-35 sm:w-50' 
+          src="./src/assets/images/logo.svg" alt="My Weather App Logo" />
       </div>
 
       <div
         onClick={() => setIsDropdownOpen((prev) => !prev)}
-        className="relative flex cursor-pointer items-center gap-2 rounded-lg bg-neutral-800 px-4 py-2"
+        className= "relative flex cursor-pointer items-center  rounded-lg bg-neutral-800 gap-2 px-2 lg:px-4 py-2"
       >
         <img src="./src/assets/images/icon-units.svg" alt="Units Toggle" />
         <span className="text-sm">Units</span>
         <div>
           <img
-            className={`transform transition-transform ${!isDropdownOpen ? 'rotate-180' : ''}`}
+            className={`transform transition-transform ${!isDropdownOpen ? 'rotate-180' : ''} ${isMobile  ? 'h-2' : ''} `}
             src="./src/assets/images/icon-dropdown.svg"
             alt="Dropdown"
           />
@@ -39,7 +39,7 @@ const Header = () => {
         {isDropdownOpen && (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="absolute right-0 top-full z-10 mt-2 w-52 rounded-lg bg-neutral-800 p-2 shadow-lg"
+            className={`absolute z-50 bg-neutral-800 p-2 shadow-lg ${isMobile ? 'right-0 top-full rounded-lg w-52 mt-2' : '-right-6 -top-4 w-screen pt-8 h-screen'}`}
           >
             <button
               onClick={handleUnitToggle}
@@ -47,6 +47,12 @@ const Header = () => {
             >
               Switch to {isMetric ? 'Imperial' : 'Metric'}
             </button>
+
+            {!isMobile &&             
+              <button onClick={() => setIsDropdownOpen((prev) => !prev)} className='absolute right-2.5 top-2.5'>
+                &#10005;
+              </button>
+            }
 
             <div className="mb-1 p-2 text-sm text-neutral-300">Temperature</div>
             <ul>

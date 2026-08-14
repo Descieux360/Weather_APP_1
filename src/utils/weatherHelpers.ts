@@ -63,20 +63,27 @@ export const formatDayOfWeek = (dateString: string): string => {
 /**
  * Formats an ISO Date/DateTime string into a long date display (e.g., "Tuesday, August 5, 2025").
  */
+/**
+ * Formats an ISO Date/DateTime string into a full date display (e.g., "Tuesday, August 5, 2026").
+ */
 export const formatLongDate = (dateString: string): string => {
+  if (!dateString) return '';
+
   // If datetime string has "T", parse only the date portion to avoid local timezone offset issues
   const dateOnlyString = dateString.includes('T') ? dateString.split('T')[0] : dateString;
-  
+
   // Parse elements directly to avoid browser-specific timezone offset shifts
   const [year, month, day] = dateOnlyString.split('-').map(Number);
   if (!year || !month || !day) return dateString;
-  
+
+  // Construct local date with exact YYYY, MM (0-indexed), DD
   const date = new Date(year, month - 1, day);
+
   return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
+    weekday: 'long',  // "Tuesday"
+    month: 'long',    // "August"
+    day: 'numeric',   // "5"
+    year: 'numeric',  // "2026"
   });
 };
 

@@ -1,5 +1,5 @@
 import { useWeather } from '../../context/WeatherContext';
-import { getWeatherCondition, formatDayOfWeek } from '../../utils/weatherHelpers';
+import { getWeatherCondition, formatLongDate } from '../../utils/weatherHelpers';
 
 const CurrentWeatherCard = () => {
 
@@ -34,7 +34,7 @@ const CurrentWeatherCard = () => {
     // Destructure real context values (derived prior to this return)
     const { current } = weatherData;
     const condition = getWeatherCondition(current.weather_code);
-    const formattedDate = formatDayOfWeek(current.time);
+    const formattedDate = formatLongDate(current.time);
 
         // Dynamic unit symbols from preferences
     const tempSymbol = unitPreferences.temperature === 'fahrenheit' ? '°F' : '°C';
@@ -72,15 +72,15 @@ return (
         <img
           src="../../src/assets/images/bg-today-large.svg"
           alt="Card Background"
-          className="block w-full h-auto object-cover"
+          className="block w-full h-50 xl:h-65 object-cover"
         />
 
         {/* Card Overlay Content */}
-        <div className="absolute inset-0 p-6 z-10 flex justify-between">
-          <div className="flex justify-between items-center h-full w-full">
+        <div className="absolute inset-0 px-6 py-8 z-10 flex justify-between">
+          <div className="flex flex-col sm:flex-row justify-between items-center h-full w-full">
             {/* Location & Date */}
             <div>
-              <div className="text-2xl font-bold font-bricolage">
+              <div className="text-2xl xl:text-3xl font-bold font-bricolage">
                 {`${selectedCity.name}, ${selectedCity.country}`}
               </div>
               <div className="text-sm text-neutral-200">
@@ -96,10 +96,10 @@ return (
                   alt={condition.label}
                   className="h-20 w-20 object-contain"
                 />
-                <div className="flex items-center font-bricolage text-6xl font-bold">
+                <div className="flex items-center font-bricolage text-7xl font-bold">
                   {Math.round(current.temperature_2m)}
-                  <span className="text-4xl text-neutral-300 ml-1">
-                    {tempSymbol}
+                  <span className="font-bricolage ml-1">
+                    &deg;
                   </span>
                 </div>
               </div>

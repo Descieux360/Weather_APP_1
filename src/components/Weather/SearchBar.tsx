@@ -57,9 +57,9 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="relative">
-      <div className="flex items-center justify-between space-x-4">
-        <div className="flex flex-1">
+    <div className="relative w-full sm:w-min">
+      <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row items-center lg:justify-between lg:space-x-4">
+        <div className="flex flex-1 w-full">
           <div className="flex items-center justify-center rounded-l-lg bg-neutral-800 pl-4">
             <img
               className="w-4"
@@ -68,8 +68,9 @@ const SearchBar = () => {
             />
           </div>
           <input
-            className="font-bricolage text-sm w-100 py-4 pr-4 pl-3 h-10 rounded-r-lg round-l-none bg-neutral-800 outline-none placeholder:text-neutral-300"
+            className="font-bricolage text-sm w-full sm:w-80 lg:w-100 xl:w-120 py-4 pr-4 pl-3 h-10 rounded-r-lg round-l-none bg-neutral-800 outline-none border-none placeholder:text-neutral-300"
             type="text"
+            name = "search"
             value={query}
             onChange={handleSearchChange}
             onKeyDown={handleKeyDown}
@@ -78,7 +79,7 @@ const SearchBar = () => {
         </div>
         <button
           onClick={handleSearchSubmit}
-          className="h-10 cursor-pointer rounded-lg bg-blue-500 p-2 text-sm transition-colors hover:bg-blue-600"
+          className="h-10 w-full  cursor-pointer rounded-lg bg-blue-500 p-2 text-sm transition-colors hover:bg-blue-600"
         >
           Search
         </button>
