@@ -11,21 +11,21 @@ export const getWeatherCondition = (code: number): WeatherCondition => {
   // WMO weather codes mapped to icons and human-readable names
   switch (code) {
     case 0:
-      return { label: 'Clear Sky', icon: '/src/assets/images/icon-sunny.webp' };
+      return { label: 'Clear Sky', icon: '/assets/images/icon-sunny.webp' };
     case 1:
     case 2:
-      return { label: 'Partly Cloudy', icon: '/src/assets/images/icon-partly-cloudy.webp' };
+      return { label: 'Partly Cloudy', icon: '/assets/images/icon-partly-cloudy.webp' };
     case 3:
-      return { label: 'Overcast', icon: '/src/assets/images/icon-overcast.webp' };
+      return { label: 'Overcast', icon: '/assets/images/icon-overcast.webp' };
     case 45:
     case 48:
-      return { label: 'Fog', icon: '/src/assets/images/icon-fog.webp' };
+      return { label: 'Fog', icon: '/assets/images/icon-fog.webp' };
     case 51:
     case 53:
     case 55:
     case 56:
     case 57:
-      return { label: 'Drizzle', icon: '/src/assets/images/icon-drizzle.webp' };
+      return { label: 'Drizzle', icon: '/assets/images/icon-drizzle.webp' };
     case 61:
     case 63:
     case 65:
@@ -34,14 +34,14 @@ export const getWeatherCondition = (code: number): WeatherCondition => {
     case 80:
     case 81:
     case 82:
-      return { label: 'Rain', icon: '/src/assets/images/icon-rain.webp' };
+      return { label: 'Rain', icon: '/assets/images/icon-rain.webp' };
     case 71:
     case 73:
     case 75:
     case 77:
     case 85:
     case 86:
-      return { label: 'Snow', icon: '/src/assets/images/icon-snow.webp' };
+      return { label: 'Snow', icon: '/assets/images/icon-snow.webp' };
     case 95:
     case 96:
     case 99:

@@ -69,7 +69,7 @@ export const HourlyForecast: React.FC = () => {
           <div>{currentDayLabel}</div>
           <img
             className={`h-2 transform transition-transform ${open ? '' : 'rotate-180'} m-0`}
-            src="../../src/assets/images/icon-dropdown.svg"
+            src="/assets/images/icon-dropdown.svg"
             alt="dropdown icon"
           />
           {open && (

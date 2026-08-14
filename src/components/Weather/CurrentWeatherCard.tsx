@@ -70,7 +70,7 @@ return (
       <div className="relative inline-block overflow-hidden rounded-2xl">
         {/* Background Image Asset */}
         <img
-          src="../../src/assets/images/bg-today-large.svg"
+          src="/assets/images/bg-today-large.svg"
           alt="Card Background"
           className="block w-full h-50 xl:h-65 object-cover"
         />

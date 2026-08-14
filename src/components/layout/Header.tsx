@@ -19,7 +19,7 @@ const Header = () => {
       <div className="logo">
         <img
           className='w-35 sm:w-50' 
-          src="./src/assets/images/logo.svg" alt="My Weather App Logo" />
+          src="/assets/images/logo.svg" alt="My Weather App Logo" />
       </div>
 
       <div
@@ -31,7 +31,7 @@ const Header = () => {
         <div>
           <img
             className={`transform transition-transform ${!isDropdownOpen ? 'rotate-180' : ''} ${isMobile  ? 'h-2' : ''} `}
-            src="./src/assets/images/icon-dropdown.svg"
+            src="/assets/images/icon-dropdown.svg"
             alt="Dropdown"
           />
         </div>

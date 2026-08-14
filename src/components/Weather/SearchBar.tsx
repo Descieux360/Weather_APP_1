@@ -63,7 +63,7 @@ const SearchBar = () => {
           <div className="flex items-center justify-center rounded-l-lg bg-neutral-800 pl-4">
             <img
               className="w-4"
-              src="./src/assets/images/icon-search.svg"
+              src="/assets/images/icon-search.svg"
               alt="search icon"
             />
           </div>
