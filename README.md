@@ -1,226 +1,130 @@
-# Skyward Weather Dashboard 🌤️
+# Skyward Weather Dashboard
 
-Skyward is a responsive, highly polished, and fully typed modern Weather Dashboard built with React 19, TypeScript, Vite, and Tailwind CSS v4. It allows users to search for cities globally in real time, customize their telemetry units down to specific preferences, and view beautiful, detailed 7-day daily forecasts as well as 24-hour hourly projections for any selected day.
+A responsive weather dashboard built with React 19, TypeScript, Vite and Tailwind CSS v4. Search any city, switch units, and browse a 7-day forecast with an hour-by-hour breakdown for each day.
 
----
+**[Live demo](https://weather-app-1-mu-silk.vercel.app)**
 
-## 🚀 Key Features
+![Skyward Weather Dashboard](docs/screenshot.png)
 
-* **Real-Time Geocoding Autocomplete:** Integrated with the Open-Meteo Geocoding API to suggest worldwide locations on-the-fly.
-* **In-Depth Telemetry Insights:** Track feels-like temperature, relative humidity, wind speed, and precipitation levels in a clean grid.
-* **Interactive 7-Day Forecast:** Quick-look overview detailing daily highs, lows, and weather condition trends.
-* **Day-by-Day 24-Hour Hourly Resolver:** A scrollable sidebar displaying temperature progressions hour-by-hour. Users can choose to view hourly data for any of the next 7 days via a nested day selector.
-* **Granular Unit Preferences:** Toggle between metric and imperial presets, or construct custom combinations of temperature (`°C`/`°F`), wind speed (`km/h`/`mph`), and precipitation (`mm`/`inch`).
-* **Optimized Mobile UX:** Implements responsive overlays, touch-friendly scrollbars, and transforms standard desktop dropdowns into full-screen dialogs on mobile screens.
-* **Beautiful Typography & Theme:** Stylized layout using high-legibility fonts (DM Sans & Bricolage Grotesque) and custom HSL color systems.
+## Features
 
----
+- **City search with autocomplete.** Suggestions come from the Open-Meteo Geocoding API once the query is longer than 2 characters. Pressing Enter selects the top result.
+- **Current conditions.** Temperature, feels-like, humidity, wind speed and precipitation.
+- **7-day forecast.** Daily highs, lows and weather condition.
+- **Hourly forecast.** Hour-by-hour temperatures for any of the next 7 days, chosen from a day selector.
+- **Flexible units.** Switch between metric and imperial, or mix them (for example °F with km/h and mm). The active system is derived automatically and shown as metric, imperial or custom.
+- **Responsive layout.** On small screens the units dropdown becomes a full-screen dialog.
+- **Keyboard focus styles.** Interactive elements use `:focus-visible` outlines.
 
-## 🛠️ Tech Stack & Architecture
+## Tech stack
 
-- **Frontend Core:** **React 19** utilizing functional components, custom hooks, and context-driven state management.
-- **Language Standard:** **TypeScript (v6.0)** ensuring total type safety across asynchronous API payloads and context variables.
-- **Development Tooling:** **Vite (v8)** for near-instantaneous hot module replacement (HMR) and highly efficient tree-shaken production builds.
-- **Styling System:** **Tailwind CSS v4** featuring its new high-performance CSS-only configuration directive (`@theme`) mapping custom color matrices, variable font assets, and custom-styled scrollbars.
-- **Data Source APIs:** 
-  - **Open-Meteo Geocoding API** for client-side search indexing (zero latency, no keys required).
-  - **Open-Meteo Forecast API** with coordinate mapping and automated local timezone adjustments.
+| Area | Choice |
+| --- | --- |
+| UI | React 19 (function components, custom hooks, Context) |
+| Language | TypeScript |
+| Build tool | Vite |
+| Styling | Tailwind CSS v4 (`@theme` design tokens) |
+| Data | Open-Meteo Forecast and Geocoding APIs (no API key needed) |
+| Testing | Vitest, React Testing Library |
+| Hosting | Vercel |
 
----
+## Architecture
 
-## 🧠 Architectural Logic & State Flow
-
-The application is structured around a **one-way data flow** orchestrated by a central React Context Provider:
+State lives in one provider, `WeatherContext`, and components read from it through the `useWeather` hook.
 
 ```
-                  ┌──────────────────────┐
-                  │   Search / Location  │
-                  └──────────┬───────────┘
-                             │ (User selects city)
-                             ▼
- ┌──────────┐     ┌──────────────────────┐
- │  Units   ├────►│    WeatherContext    │
- │ Dropdown │     │  (State Management)  │
- └──────────┘     └──────────┬───────────┘
-                             │
-            ┌────────────────┴────────────────┐
-            ▼ (Effects trigger API fetch)     ▼
- ┌──────────────────────┐          ┌──────────────────────┐
- │ Open-Meteo Geocoding │          │ Open-Meteo Forecast  │
- └──────────────────────┘          └──────────┬───────────┘
-                                              │ (Updates UI)
-                                              ▼
-                                 ┌───────────────────────────┐
-                                 │ - CurrentWeatherCard      │
-                                 │ - DailyForecast           │
-                                 │ - HourlyForecast          │
-                                 └───────────────────────────┘
+ Search / city selection ──┐
+                           ▼
+ Units dropdown ───►  WeatherContext  ──► fetchWeatherData ──► Open-Meteo Forecast API
+                           │
+              ┌────────────┼─────────────┐
+              ▼            ▼             ▼
+   CurrentWeatherCard  DailyForecast  HourlyForecast
 ```
 
-### 1. Centralized Context (`WeatherContext.tsx`)
-State coordinates are entirely managed in a single `WeatherContext`.
-* **State Values:** `selectedCity` (defaults to Yaoundé, Cameroon), `weatherData`, `isLoading`, `error`, and `unitPreferences`.
-* **Synchronized Side Effects:** A single React `useEffect` hooks into modifications of either the target coordinates (`latitude`/`longitude`) or the active units (`unitPreferences`). When triggered, it initiates a call to the Open-Meteo Forecast API, keeping all components in sync.
-* **Unit Alignment Helper:** When a user sets individual preferences (e.g., choosing Fahrenheit but choosing millimeters for precipitation), the system dynamically detects if the configuration perfectly mirrors Metric, Imperial, or a Custom mix.
+**Data fetching.** One `useEffect` in `WeatherContext.tsx` re-fetches whenever the selected coordinates, the unit preferences, or a manual refresh change. Units are passed to the Forecast API, so conversion happens server-side.
 
-### 2. Geocoding API Search (`SearchBar.tsx` & `weatherApi.ts`)
-* To optimize bandwidth and respect API rate limits, autocomplete searches are dispatched to Open-Meteo's geocoding endpoint only when the search query extends past **2 characters**.
-* Pressing **Enter** or clicking **Search** automatically selects the top suggested result.
+**Stale responses.** Effects can't cancel async work on their own, so each run of the effect has a `cancelled` flag that its cleanup sets. If a user picks a second city before the first request returns, the late response is ignored and can't overwrite newer data or flip the loading state.
 
-### 3. WMO Weather Code Resolution (`weatherHelpers.ts`)
-The Open-Meteo API transmits weather types using the standardized **WMO (World Meteorological Organization) 4677 weather code table**. 
-* The utility function `getWeatherCondition(code)` converts numerical integers (e.g., `0` for Clear Sky, `3` for Overcast, `95` for Thunderstorms) into corresponding static asset pathways (`.webp` files) and descriptive text.
+**Unit preferences.** Temperature, wind and precipitation units are stored separately. A pure helper, `withSystem`, derives whether the combination is metric, imperial or custom. Selecting a unit that is already active returns the same state object, so it doesn't trigger a refetch.
 
-### 4. Hourly Forecast Filtration (`HourlyForecast.tsx`)
-The Forecast API supplies hourly predictions for all 168 hours of the upcoming week in a single flat array.
-* The system utilizes a `useMemo` filter that slices and isolates the specific 24-hour window matching the date chosen by the user in the dropdown.
-* It displays weather icons, hours in 24-hour format, and corresponding temperatures.
+**Hourly data.** The API returns all 168 hourly values for the week in one flat array. `HourlyForecast` uses `useMemo` to slice out the 24-hour window for the selected day.
 
-### 5. Media Queries & Responsive Switch (`useMediaQuery.ts`)
-* A custom hook `useMediaQuery` listens directly to viewport shifts.
-* **Responsiveness Optimization:** On wider screens, clicking the "Units" toggle displays a lightweight floating overlay. On mobile devices, the dropdown dynamically converts into a full-height dialog drawer with a close button (`✕`) for native-like user experience.
+**Weather codes.** Open-Meteo uses WMO weather interpretation codes. `getWeatherCondition(code)` in `weatherHelpers.ts` maps each code to a label and an icon, with an `Unknown` fallback.
 
----
+**Dates.** The date helpers parse `YYYY-MM-DD` strings into local dates by hand instead of using `new Date("YYYY-MM-DD")`, which is parsed as UTC and can show the wrong weekday in timezones behind UTC. Invalid or out-of-range dates return an empty string, or the original input for `formatLongDate`.
 
-## 📁 Directory Structure
+## Project structure
 
-```text
-C:\Workspace\Personal Projects\weather_app_1\
-├── package.json               # Project dependencies and operational scripts
-├── vite.config.ts             # Vite bundler, React, and Tailwind CSS v4 configurations
-├── tsconfig.json              # TypeScript root settings
-├── index.html                 # Entry point HTML document
-└── src/
-    ├── main.tsx               # Client bootstrapper
-    ├── App.tsx                # Layout shell and main application assembly
-    ├── index.css              # Custom scrollbars, custom fonts, Tailwind theme configurations
-    ├── components/
-    │   ├── common/            # Shared UI components
-    │   ├── layout/
-    │   │   └── Header.tsx     # Site brand bar and Unit switch modal wrapper
-    │   └── Weather/
-    │       ├── CurrentWeatherCard.tsx  # Highlights current weather with telemetry indicators
-    │       ├── DailyForecast.tsx       # 7-day weather cards showing day high/lows
-    │       ├── HourlyForeCast.tsx      # Scrollable day-specific hourly breakdown list
-    │       └── SearchBar.tsx           # Search input with autocomplete recommendations dropdown
-    ├── context/
-    │   └── WeatherContext.tsx # Application-wide React Context & unit-switch handlers
-    ├── hooks/
-    │   └── useMediaQuery.ts   # Custom window width listener for adaptive interfaces
-    ├── services/
-    │   └── weatherApi.ts      # Open-Meteo HTTP fetch integrations (Forecast & Geocoding)
-    ├── types/
-    │   ├── GeocodingResult.ts # Data interfaces representing locations & forecast payloads
-    │   └── units.ts           # Enums and configurations governing metric/imperial units
-    └── utils/
-        └── weatherHelpers.ts  # ISO date formats, WMO icon mappers, and hour parsers
+```
+Weather_APP_1/
+├── public/                      # Static assets (weather icons, fonts)
+├── src/
+│   ├── components/
+│   │   ├── common/              # Shared UI components
+│   │   ├── layout/Header.tsx    # Brand bar and units control
+│   │   └── Weather/
+│   │       ├── CurrentWeatherCard.tsx
+│   │       ├── DailyForecast.tsx
+│   │       ├── HourlyForecast.tsx
+│   │       └── SearchBar.tsx
+│   ├── context/
+│   │   └── WeatherContext.tsx   # Provider, fetch effect, unit actions
+│   ├── hooks/
+│   │   └── useMediaQuery.ts
+│   ├── services/
+│   │   └── weatherApi.ts        # Forecast and geocoding requests
+│   ├── types/
+│   │   ├── GeocodingResult.ts   # API response types
+│   │   └── units.ts             # Unit systems and presets
+│   └── utils/
+│       └── weatherHelpers.ts    # WMO mapping, date and hour formatting
+├── index.html
+├── package.json
+└── vite.config.ts
 ```
 
----
+## Getting started
 
-## 🧩 Data Schemas & Types
+**Requirements:** Node.js 18 or later.
 
-The application leverages strongly typed schemas to ensure payload reliability.
-
-```typescript
-// Location Object returned by search API
-export interface GeocodingResult {
-  id: number;
-  name: string;
-  latitude: number;
-  longitude: number;
-  country: string;
-  admin1?: string;
-}
-
-// Complex Open-Meteo forecast return schema
-export interface OpenMeteoForecastResponse {
-  latitude: number;
-  longitude: number;
-  current: {
-    time: string;
-    temperature_2m: number;
-    relative_humidity_2m: number;
-    apparent_temperature: number;
-    precipitation: number;
-    weather_code: number;
-    wind_speed_10m: number;
-  };
-  daily: {
-    time: string[];
-    weather_code: number[];
-    temperature_2m_max: number[];
-    temperature_2m_min: number[];
-  };
-  hourly: {
-    time: string[];
-    temperature_2m: number[];
-    weather_code: number[];
-  };
-}
-```
-
----
-
-## 🏎️ Getting Started
-
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) (v18+) installed on your local computer.
-
-### Installation
-
-1. **Clone the Repository:**
-   ```bash
-   git clone <repository-url>
-   cd weather_app_1
-   ```
-
-2. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start the Local Development Server:**
-   ```bash
-   npm run dev
-   ```
-   Open your browser and navigate to `http://localhost:5173` to interact with the project!
-
-### Production Build
-
-To run ESLint, compile the TypeScript source files, and generate optimized production files, execute:
 ```bash
-npm run build
-```
-This produces a static output inside the `dist/` directory ready to be deployed on static hosting providers like Netlify, Vercel, or GitHub Pages.
-
-To preview your production build locally:
-```bash
-npm run preview
+git clone https://github.com/Descieux360/Weather_APP_1.git
+cd Weather_APP_1
+npm install
+npm run dev
 ```
 
----
+Then open <http://localhost:5173>.
 
-## 🎨 Visual System & Styling Details
+## Scripts
 
-Skyward's aesthetic is configured natively within the **Tailwind CSS v4** environment using custom design tokens declared in `src/index.css`:
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Type-check and create a production build in `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Run ESLint |
+| `npm test` | Run the test suite once |
+| `npm run test:tz` | Run the tests under `America/Los_Angeles` to catch timezone bugs |
 
-```css
-@theme {
-  /* Dynamic Variable Fonts */
-  --font-dm: "DM Sans", sans-serif;
-  --font-bricolage: "Bricolage Grotesque", sans-serif;
+## Testing
 
-  /* WCAG-Friendly Dark Background & High-Contrast Colors */
-  --color-neutral-900: hsl(243, 96%, 9%);  /* Main deep space backdrop */
-  --color-neutral-800: hsl(243, 27%, 20%); /* Secondary containers */
-  --color-neutral-600: hsl(243, 23%, 30%); /* Scrollbar-thumbs and borders */
-  --color-neutral-0: hsl(0, 0%, 100%);     /* Pure white crisp text */
+Tests use Vitest and React Testing Library.
 
-  /* Focus Accent and Actions */
-  --color-blue-500: hsl(233, 67%, 56%);    /* Focus rings & main call-to-actions */
-}
-```
+- **`weatherHelpers.test.ts`** covers the WMO mapping (every documented code plus the unknown fallback), date formatting, and invalid input.
+- **`WeatherContext.test.tsx`** covers the provider. One test checks that a stale response can't overwrite a newer one. Another checks that choosing the unit that's already active doesn't refetch.
 
-* **Focus States:** Every interactive element has been calibrated with standard WCAG outline settings (`*:focus-visible`) for fully-compliant keyboard navigation.
-* **Custom Scrollbars (`.spaced-scrollbar`):** Leverages Webkit selectors combined with padding-box background clip tricks to construct "floating" scrollbar handles that prevent visual collision with content blocks.
+The date tests also run under a different timezone (`npm run test:tz`), which is how the UTC date-parsing bug in `formatDayOfWeek` was found and fixed.
+
+## Roadmap
+
+- Abort in-flight network requests with `AbortController`, not just ignore their results
+- Debounce the search input
+- Keyboard navigation and combobox ARIA roles for the suggestions list
+- Remember the last city and unit choice between visits
+- Component-level tests for the search bar and forecast components
+
+## Data source
+
+Weather and location data come from [Open-Meteo](https://open-meteo.com/).
