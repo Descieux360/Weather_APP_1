@@ -79,7 +79,7 @@ const SearchBar = () => {
         </div>
         <button
           onClick={handleSearchSubmit}
-          className="h-10 w-full  cursor-pointer rounded-lg bg-blue-500 p-2 text-sm transition-colors hover:bg-blue-600"
+          className="h-10 w-full sm:ml-4 lg:ml-0  cursor-pointer rounded-lg bg-blue-500 p-2 text-sm transition-colors hover:bg-blue-600"
         >
           Search
         </button>

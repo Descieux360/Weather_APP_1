@@ -1,6 +1,3 @@
-/**
- * Maps WMO Weather Interpretation Codes (WMO 4677) to dynamic weather icons and descriptions.
- */
 
 export interface WeatherCondition {
   label: string;
@@ -60,9 +57,6 @@ export const formatDayOfWeek = (dateString: string): string => {
   return date.toLocaleDateString('en-US', { weekday: 'short' });
 };
 
-/**
- * Formats an ISO Date/DateTime string into a long date display (e.g., "Tuesday, August 5, 2025").
- */
 /**
  * Formats an ISO Date/DateTime string into a full date display (e.g., "Tuesday, August 5, 2026").
  */
