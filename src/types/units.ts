@@ -1,6 +1,7 @@
 export const UNIT_SYSTEMS = {
   METRIC: 'metric',
   IMPERIAL: 'imperial',
+  CUSTOM: 'custom',
 } as const;
 
 export type UnitSystem = (typeof UNIT_SYSTEMS)[keyof typeof UNIT_SYSTEMS];
