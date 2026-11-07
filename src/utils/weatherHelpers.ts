@@ -49,35 +49,50 @@ export const getWeatherCondition = (code: number): WeatherCondition => {
 };
 
 /**
- * Formats an ISO Date string (e.g. "2026-08-09") into a human-readable day of the week (e.g., "Mon").
+ * Parses "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm" into a local-time Date.
+ * Avoids `new Date("YYYY-MM-DD")`, which is parsed as UTC and shifts the day
+ * in timezones behind UTC. Returns null for malformed or out-of-range dates.
  */
-export const formatDayOfWeek = (dateString: string): string => {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-US', { weekday: 'short' });
+const parseLocalDate = (dateString: string): Date | null => {
+  if (!dateString) return null;
+  const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
+  if (!year || !month || !day) return null;
+
+  const date = new Date(year, month - 1, day);
+  // Reject rollovers such as 2026-13-45
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+  return date;
 };
 
 /**
- * Formats an ISO Date/DateTime string into a full date display (e.g., "Tuesday, August 5, 2026").
+ * Formats an ISO date (e.g. "2026-08-09") as a short weekday (e.g. "Sun").
+ * Returns '' for invalid input.
+ */
+export const formatDayOfWeek = (dateString: string): string => {
+  const date = parseLocalDate(dateString);
+  return date ? date.toLocaleDateString('en-US', { weekday: 'short' }) : '';
+};
+
+/**
+ * Formats an ISO date/datetime (e.g. "2026-08-05") as "Wednesday, August 5, 2026".
+ * Returns '' for empty input and the original string if it can't be parsed.
  */
 export const formatLongDate = (dateString: string): string => {
   if (!dateString) return '';
-
-  // If datetime string has "T", parse only the date portion to avoid local timezone offset issues
-  const dateOnlyString = dateString.includes('T') ? dateString.split('T')[0] : dateString;
-
-  // Parse elements directly to avoid browser-specific timezone offset shifts
-  const [year, month, day] = dateOnlyString.split('-').map(Number);
-  if (!year || !month || !day) return dateString;
-
-  // Construct local date with exact YYYY, MM (0-indexed), DD
-  const date = new Date(year, month - 1, day);
+  const date = parseLocalDate(dateString);
+  if (!date) return dateString;
 
   return date.toLocaleDateString('en-US', {
-    weekday: 'long',  // "Tuesday"
-    month: 'long',    // "August"
-    day: 'numeric',   // "5"
-    year: 'numeric',  // "2026"
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   });
 };
 
