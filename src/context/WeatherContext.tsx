@@ -1,12 +1,14 @@
 import {
   createContext,
+  useCallback,
   useContext,
-  useState,
   useEffect,
+  useMemo,
+  useState,
   type ReactNode,
 } from 'react';
 import { fetchWeatherData } from '../services/weatherApi';
-import type { OpenMeteoForecastResponse, GeocodingResult } from '../types/GeocodingResult'; // Import here!
+import type { OpenMeteoForecastResponse, GeocodingResult } from '../types/GeocodingResult';
 import {
   METRIC_PREFERENCES,
   IMPERIAL_PREFERENCES,
@@ -16,20 +18,18 @@ import {
 
 interface WeatherContextType {
   selectedCity: GeocodingResult | null;
-  weatherData: OpenMeteoForecastResponse | null; // Use imported type
+  weatherData: OpenMeteoForecastResponse | null;
   isLoading: boolean;
   error: string | null;
   unitPreferences: UnitPreferences;
   isMetric: boolean;
 
   setSelectedCity: (city: GeocodingResult | null) => void;
-  setWeatherData: (data: OpenMeteoForecastResponse | null) => void;
-  setIsLoading: (loading: boolean) => void;
   toggleUnitSystem: () => void;
   setTemperatureUnit: (unit: 'celsius' | 'fahrenheit') => void;
   setWindUnit: (unit: 'kmh' | 'mph') => void;
   setPrecipitationUnit: (unit: 'mm' | 'inch') => void;
-  refreshWeather: () => Promise<void>;
+  refreshWeather: () => void;
 }
 
 const DEFAULT_CITY: GeocodingResult = {
@@ -40,117 +40,120 @@ const DEFAULT_CITY: GeocodingResult = {
   longitude: 11.5021,
 };
 
+/** Derives `system` from the individual unit choices. Pure, so it lives outside the component. */
+const withSystem = (prefs: UnitPreferences): UnitPreferences => {
+  const isAllMetric =
+    prefs.temperature === 'celsius' &&
+    prefs.windSpeed === 'kmh' &&
+    prefs.precipitation === 'mm';
+  const isAllImperial =
+    prefs.temperature === 'fahrenheit' &&
+    prefs.windSpeed === 'mph' &&
+    prefs.precipitation === 'inch';
+
+  if (isAllMetric) return { ...prefs, system: UNIT_SYSTEMS.METRIC };
+  if (isAllImperial) return { ...prefs, system: UNIT_SYSTEMS.IMPERIAL };
+  return { ...prefs, system: UNIT_SYSTEMS.CUSTOM };
+};
+
 const WeatherContext = createContext<WeatherContextType | undefined>(undefined);
 
 export const WeatherProvider = ({ children }: { children: ReactNode }) => {
   const [selectedCity, setSelectedCity] = useState<GeocodingResult | null>(DEFAULT_CITY);
   const [weatherData, setWeatherData] = useState<OpenMeteoForecastResponse | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [unitPreferences, setUnitPreferences] = useState<UnitPreferences>(METRIC_PREFERENCES);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const isMetric = unitPreferences.system === UNIT_SYSTEMS.METRIC;
+  const latitude = selectedCity?.latitude;
+  const longitude = selectedCity?.longitude;
 
-  // Core weather loading function
-  const loadWeatherData = async (
-    city: GeocodingResult | null,
-    units: UnitPreferences
-  ) => {
-    if (!city) return;
+  // Fetch whenever the location, the units, or a manual refresh changes.
+  useEffect(() => {
+    if (latitude === undefined || longitude === undefined) return;
+
+    // Set by the cleanup below, so a response for an outdated request is ignored.
+    let cancelled = false;
+
     setIsLoading(true);
     setError(null);
 
-    try {
-      const data = await fetchWeatherData(city.latitude, city.longitude, units);
-      setWeatherData(data);
-    } catch (err) {
-      console.error('Failed to fetch weather data:', err);
-      setError('Failed to load weather data. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchWeatherData(latitude, longitude, unitPreferences)
+      .then((data) => {
+        if (!cancelled) setWeatherData(data);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('Failed to fetch weather data:', err);
+        setError('Failed to load weather data. Please try again.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
 
-  // Re-fetch weather whenever active location or unit preferences change
-  useEffect(() => {
-    loadWeatherData(selectedCity, unitPreferences);
-  }, [selectedCity?.latitude, selectedCity?.longitude, unitPreferences]);
+    return () => {
+      cancelled = true;
+    };
+  }, [latitude, longitude, unitPreferences, refreshKey]);
 
-  // Action: Refresh weather manually
-  const refreshWeather = async () => {
-    await loadWeatherData(selectedCity, unitPreferences);
-  };
+  const refreshWeather = useCallback(() => setRefreshKey((k) => k + 1), []);
 
-  // Action: Toggle overall system (Metric <-> Imperial)
-  const toggleUnitSystem = () => {
+  const toggleUnitSystem = useCallback(() => {
     setUnitPreferences((prev) =>
-      prev.system === UNIT_SYSTEMS.METRIC ? IMPERIAL_PREFERENCES : METRIC_PREFERENCES
+      prev.system === UNIT_SYSTEMS.METRIC ? IMPERIAL_PREFERENCES : METRIC_PREFERENCES,
     );
-  };
+  }, []);
 
-  // Action: Set temperature unit specifically
-  const setTemperatureUnit = (unit: 'celsius' | 'fahrenheit') => {
+  // Returns `prev` unchanged when nothing changed, so the effect doesn't refetch.
+  const updateUnits = useCallback((patch: Partial<UnitPreferences>) => {
     setUnitPreferences((prev) => {
-      const updated = { ...prev, temperature: unit };
-      return checkSystemAlignment(updated);
+      const next = { ...prev, ...patch };
+      const unchanged =
+        next.temperature === prev.temperature &&
+        next.windSpeed === prev.windSpeed &&
+        next.precipitation === prev.precipitation;
+      return unchanged ? prev : withSystem(next);
     });
-  };
+  }, []);
 
-  // Action: Set wind speed unit specifically
-  const setWindUnit = (unit: 'kmh' | 'mph') => {
-    setUnitPreferences((prev) => {
-      const updated = { ...prev, windSpeed: unit };
-      return checkSystemAlignment(updated);
-    });
-  };
-
-  // Action: Set precipitation unit specifically
-  const setPrecipitationUnit = (unit: 'mm' | 'inch') => {
-    setUnitPreferences((prev) => {
-      const updated = { ...prev, precipitation: unit };
-      return checkSystemAlignment(updated);
-    });
-  };
-
-  // Helper to determine if custom unit combination aligns with metric or imperial default
-  const checkSystemAlignment = (prefs: UnitPreferences): UnitPreferences => {
-    const isAllMetric =
-      prefs.temperature === 'celsius' &&
-      prefs.windSpeed === 'kmh' &&
-      prefs.precipitation === 'mm';
-
-    const isAllImperial =
-      prefs.temperature === 'fahrenheit' &&
-      prefs.windSpeed === 'mph' &&
-      prefs.precipitation === 'inch';
-
-    if (isAllMetric) return { ...prefs, system: 'metric' };
-    if (isAllImperial) return { ...prefs, system: 'imperial' };
-    return { ...prefs, system: 'custom' as any };
-  };
-
-  return (
-    <WeatherContext.Provider
-      value={{
-        selectedCity,
-        weatherData,
-        isLoading,
-        error,
-        unitPreferences,
-        isMetric,
-        setSelectedCity,
-        setWeatherData,
-        setIsLoading,
-        toggleUnitSystem,
-        setTemperatureUnit,
-        setWindUnit,
-        setPrecipitationUnit,
-        refreshWeather,
-      }}
-    >
-      {children}
-    </WeatherContext.Provider>
+  const setTemperatureUnit = useCallback(
+    (unit: 'celsius' | 'fahrenheit') => updateUnits({ temperature: unit }),
+    [updateUnits],
   );
+  const setWindUnit = useCallback(
+    (unit: 'kmh' | 'mph') => updateUnits({ windSpeed: unit }),
+    [updateUnits],
+  );
+  const setPrecipitationUnit = useCallback(
+    (unit: 'mm' | 'inch') => updateUnits({ precipitation: unit }),
+    [updateUnits],
+  );
+
+  const isMetric = unitPreferences.system === UNIT_SYSTEMS.METRIC;
+
+  const value = useMemo<WeatherContextType>(
+    () => ({
+      selectedCity,
+      weatherData,
+      isLoading,
+      error,
+      unitPreferences,
+      isMetric,
+      setSelectedCity,
+      toggleUnitSystem,
+      setTemperatureUnit,
+      setWindUnit,
+      setPrecipitationUnit,
+      refreshWeather,
+    }),
+    [
+      selectedCity, weatherData, isLoading, error, unitPreferences, isMetric,
+      toggleUnitSystem, setTemperatureUnit, setWindUnit, setPrecipitationUnit, refreshWeather,
+    ],
+  );
+
+  return <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>;
 };
 
 export const useWeather = (): WeatherContextType => {
